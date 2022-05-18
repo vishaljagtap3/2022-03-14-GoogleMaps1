@@ -7,6 +7,10 @@ import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -54,6 +58,48 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         addOnMarkerDragListener()
 
         addShapes()
+        setInfoWindowAdapter()
+        misc()
+    }
+
+    private fun misc() {
+        map.setOnPoiClickListener {
+            mt("Poi: ${it.name}")
+        }
+
+        map.setMapStyle(
+            MapStyleOptions.loadRawResourceStyle(
+                this,
+                R.raw.my_style
+            )
+        )
+    }
+
+    private fun setInfoWindowAdapter() {
+        map.setInfoWindowAdapter(MyInfoWindowAdapter())
+    }
+
+    private inner class MyInfoWindowAdapter : GoogleMap.InfoWindowAdapter {
+
+        override fun getInfoWindow(marker: Marker): View? {
+            return null
+        }
+
+        override fun getInfoContents(marker: Marker): View? {
+
+            var view = layoutInflater.inflate(R.layout.my_infowindow, null)
+
+            var binding = com.bitcode.goooglemaps1.databinding.MyInfowindowBinding.bind(view)
+            binding.txtTitle.setText(marker.title)
+            binding.imgInfo.setImageResource(R.mipmap.ic_launcher)
+
+            /*var txtTitle = view.findViewById<TextView>(R.id.txtTitle)
+            var imgInfo = view.findViewById<ImageView>(R.id.imgInfo);
+            txtTitle.setText(marker.title)
+            imgInfo.setImageResource(R.mipmap.ic_launcher)*/
+
+            return view
+        }
     }
 
     private fun addShapes() {
@@ -128,8 +174,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 )!!
             )
             count++
+            //var cameraUpdate = CameraUpdateFactory.newLatLng(puneMarker.position)
+            //var cameraUpdate = CameraUpdateFactory.newLatLngZoom(puneMarker.position, 16F)
+            //map.moveCamera(cameraUpdate)
+            var cameraPosition = CameraPosition.Builder()
+                .tilt(90F)
+                .zoom(18F)
+                .bearing(60F)
+                .target(puneMarker.position)
+                .build()
+
+            var cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition)
+
+            map.animateCamera(cameraUpdate, 5000, MyAnimationCancellableCallback())
+        }
+
+
+    }
+
+    inner class MyAnimationCancellableCallback : GoogleMap.CancelableCallback {
+        override fun onCancel() {
+            mt("Animation Cancelled")
+        }
+
+        override fun onFinish() {
+            mt("Animation finished")
         }
     }
+
 
     private fun addMarkers() {
 
